@@ -28,13 +28,14 @@ include_once ($ROOT . "/includes/WebsiteSettings.php");
 //inlcude Thurdy settings
 include_once (SETTINGS_DIR . "/ThurdySettings.php");
 
-//inlcude web site settings
-include_once ($ROOT . "/classes/class_ThurdySong.php");
-$oSongs = new ThurdySong();
-$oSongs->sOrderByField = "SONG_NUMBER";
+include_once (DATALAYER_DIR . "/ThurdySong.php");
+include_once (DATALAYER_DIR . "/ThurdySongRepository.php");
 
-if(!$oSongs->getThurdySong())
-{
+$songs = [];
+try {
+	$songs = (new \Datalayer\ThurdySongRepository())->find(['orderBy' => 'SONG_NUMBER']);
+} catch (Throwable $e) {
+	error_log('tracks.php - ' . $e->getMessage());
 	echo "CANT GET TRACKS";
 }
 ?>
@@ -45,9 +46,9 @@ if(!$oSongs->getThurdySong())
 	<TD>
 <?php 
 	
-	foreach($oSongs->aSongRecords as $oSong)
+	foreach($songs as $oSong)
 	{
-		echo $oSong->nSongNumber . " - " . $oSong->sSongTitle . "<BR>";
+		echo $oSong->songNumber . " - " . $oSong->songTitle . "<BR>";
 	}
 ?>
 

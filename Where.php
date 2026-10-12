@@ -12,18 +12,14 @@ include_once (SETTINGS_DIR . "/ThurdySettings.php");
 //Common Functions
 include (INCLUDE_DIR . "/commonFunctions.php");
 
-//include Drop Class		
-include_once (CLASS_DIR . "/class_ThurdyDrop.php");
+include_once (DATALAYER_DIR . "/ThurdyDrop.php");
+include_once (DATALAYER_DIR . "/ThurdyDropRepository.php");
 
-$oDrops = new ThurdyDrop();
-
-if(!$oDrops->getThurdyDrop())
-{
+$drops = (new \Datalayer\ThurdyDropRepository())->find();
+if (count($drops) === 0) {
 	echo "ERROR!";
-}
-else
-{
-	shuffle($oDrops->aDropRecords);
+} else {
+	shuffle($drops);
 }
 
 ?>
@@ -46,14 +42,14 @@ include_once (INCLUDE_DIR . "/Head.php");
 			<main role="main">
 				<section>
 				<?php
-				foreach($oDrops->aDropRecords as $oDrop)
+				foreach($drops as $oDrop)
 				{
 					echo "<div class=\"col-lg-3 col-md-4 col-sm-6 col-xs-12\">";
 					echo "<figure class=\"drop-image\">";
-					echo "  <IMG SRC=" . IMG_DIR  . "/drops/{$oDrop->sDropImage} />";
-					echo "<figcaption>{$oDrop->sDropLocation}<br>";
-					if (!empty($oDrop->sDropDesc)) {
-						echo "({$oDrop->sDropDesc})</figcaption>";
+					echo "  <IMG SRC=" . IMG_DIR  . "/drops/{$oDrop->dropImage} />";
+					echo "<figcaption>{$oDrop->dropLocation}<br>";
+					if (!empty($oDrop->dropDesc)) {
+						echo "({$oDrop->dropDesc})</figcaption>";
 						}		
 					echo "</figure>";
 					echo "</div>";

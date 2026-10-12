@@ -129,9 +129,6 @@ console.log("spinner on")
 	//});
 </script>
 <?php 
-//include COMMENT Class		
-include_once (CLASS_DIR . "/class_ThurdyComment.php");
-
 $sPostError = NULL;
 $bPostSuccess = false;
 

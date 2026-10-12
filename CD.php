@@ -14,43 +14,23 @@ include_once(SETTINGS_DIR . "/ThurdySettings.php");
 //Common Functions
 include(INCLUDE_DIR . "/commonFunctions.php");
 
-//include CD Class
-include_once(CLASS_DIR . "/class_CD.php");
+include_once(DATALAYER_DIR . "/CD.php");
+include_once(DATALAYER_DIR . "/CDRepository.php");
+include_once(DATALAYER_DIR . "/Song.php");
+include_once(DATALAYER_DIR . "/SongRepository.php");
+include_once(DATALAYER_DIR . "/Review.php");
+include_once(DATALAYER_DIR . "/ReviewRepository.php");
 
-//include Song Class
-include_once(CLASS_DIR . "/class_Song.php");
-
-//include Review Class
-include_once(CLASS_DIR . "/class_Review.php");
-
-//include Award Class
-include_once(CLASS_DIR . "/class_Award.php");
-
-//include Error Log Class
-include_once(CLASS_DIR . "/class_ErrorLog.php");
-
-//Get CDs
-$oCD = new CD();
-
-//If a CD ID is passed, display information for that CD
 if (isset($_REQUEST['cd-id']) && $_REQUEST['cd-id'] != "") {
-	$oCD->nCDID = preg_replace("/[^0-9]/", "", $_REQUEST['cd-id']);
+	$cdId = (int) preg_replace("/[^0-9]/", "", $_REQUEST['cd-id']);
 } else {
-	$oCD->nCDID = DEFAULT_CD_ID;
+	$cdId = DEFAULT_CD_ID;
 }
 
-$oCD->nArtistID = THURDY_ARTIST_ID;
-
-if (!$oCD->getCD()) {
-	$error = new ErrorLog('CD.php', 'getCD()', 'Error getting CD', $oCD->nCDID, 'CD');
-	$error->writeErrorLog();
-} else {
-	$oSongs = new Song();
-	$oSongs->nCDID = $oCD->nCDID;
-	if (!$oSongs->getSong()) {
-		$error = new ErrorLog('CD.php', 'getSong()', 'Error getting Songs', $oCD->nCDID, 'Song');
-		$error->writeErrorLog();
-	}
+$oThisCD = (new \Datalayer\CDRepository())->findById($cdId);
+$songs = [];
+if ($oThisCD !== null) {
+	$songs = (new \Datalayer\SongRepository())->findByCdId($oThisCD->id);
 }
 
 ?>
@@ -75,30 +55,28 @@ include_once(INCLUDE_DIR . "/Head.php");
 		<div class="row">
 			<main id="main-content" class="col-xs-12">
 				<?php
-				if (sizeof($oCD->aCDRecords) > 0) {
-
-					$oThisCD = $oCD->aCDRecords[0];
+				if ($oThisCD !== null) {
 					?>
 					<article id="cd-list" class="row">
 						<div class="col-xs-12 col-sm-6 col-sm-push-3 col-md-5 col-md-push-0">
 							<div class="cd-cover">
 								<figure class="dynamic-width">
-									<img src="<?php echo IMG_DIR . "/{$oThisCD->sCDImage}"; ?>">
+									<img src="<?php echo IMG_DIR . "/{$oThisCD->image}"; ?>">
 								</figure>
-								<div class="cd-title"><?php echo $oThisCD->sCDName; ?></div>
+								<div class="cd-title"><?php echo $oThisCD->name; ?></div>
 								<?php
-								renderPurchaseButton($oThisCD->sPurchaseLink);
-								renderLyricsButton(LYRICS_TYPE_CD, $oThisCD->nCDID);
+								renderPurchaseButton($oThisCD->purchaseLink);
+								renderLyricsButton(LYRICS_TYPE_CD, $oThisCD->id);
 								?>
 							</div>
 							<section class="track-listing">
 								<h3>Tracks</h3>
 								<ol>
 									<?php
-									foreach ($oSongs->aSongRecords as $oSong) {
+									foreach ($songs as $oSong) {
 										echo "<li>";
-										echo "<a href=\"{$ROOT}/Song.php?song-id={$oSong->nSongID}\">";
-										echo "<div class=\"track-title\">{$oSong->sSongName}</div>";
+										echo "<a href=\"{$ROOT}/Song.php?song-id={$oSong->id}\">";
+										echo "<div class=\"track-title\">{$oSong->name}</div>";
 										echo "</a>";
 										echo "</li>";
 									}
@@ -109,9 +87,9 @@ include_once(INCLUDE_DIR . "/Head.php");
 						<div class="col-xs-12 col-md-7">
 							<section>
 								<?php
-								renderAwards(AWARD_TYPE_CD, $oThisCD->nCDID, AWARD_SIZE_LARGE);
+								renderAwards(AWARD_TYPE_CD, $oThisCD->id, AWARD_SIZE_LARGE);
 								echo "<div>";
-								echo $oThisCD->sCDDescription;
+								echo $oThisCD->description;
 								echo "</div>";
 								?>
 							</section>
@@ -121,11 +99,11 @@ include_once(INCLUDE_DIR . "/Head.php");
 						<!--<div class="col-xs-12 col-md-7 col-md-push-5">
 						<section>
 							<?php
-							$oCDReviews = $oThisCD->getReviews();
-							if (sizeof($oCDReviews->aReviewRecords) > 1) {
-								renderReviewSlideshow($oCDReviews->aReviewRecords);
-							} else {
-								renderReview($oCDReviews->aReviewRecords[0]);
+							$cdReviews = (new \Datalayer\ReviewRepository())->find(['cdId' => $oThisCD->id]);
+							if (count($cdReviews) > 1) {
+								renderReviewSlideshow($cdReviews);
+							} elseif (count($cdReviews) > 0) {
+								renderReview($cdReviews[0]);
 							}
 							?>
 						</section>
@@ -135,9 +113,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 						</div>
 					</div>
 				<?php } else {
-					echo "NO CD FOUND FOR ID: {$oCD->nCDID}";
-					$error = new ErrorLog('CD.php', 'getCD()', 'No CD records found', $oCD->nCDID, 'CD');
-					$error->writeErrorLog();
+					echo "NO CD FOUND FOR ID: {$cdId}";
 				}
 				?>
 			</main>
