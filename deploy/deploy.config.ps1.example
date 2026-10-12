@@ -1,0 +1,10 @@
+# Copy this file to deploy.config.ps1 and fill in values.
+# deploy.config.ps1 is gitignored — do not commit passwords.
+
+$FtpHost = "107.180.115.215"
+$FtpUser = "steveweeksmusic"
+$RemoteRoot = "/public_html/thurdy.com"
+
+# Leave blank to be prompted, or set $env:THURDY_FTP_PASSWORD
+# (same account as the other sites — $env:TBM_FTP_PASSWORD also works).
+$FtpPassword = ""
