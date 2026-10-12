@@ -15,23 +15,13 @@ include_once(SETTINGS_DIR . "/ThurdySettings.php");
 //Common Functions
 include(INCLUDE_DIR . "/commonFunctions.php");
 
-//include COMMENT Class		
-include_once(CLASS_DIR . "/class_ThurdyComment.php");
+include_once(DATALAYER_DIR . "/ThurdyDrop.php");
+include_once(DATALAYER_DIR . "/ThurdyDropRepository.php");
 
-//include Drop Class		
-include_once(CLASS_DIR . "/class_ThurdyDrop.php");
-
-
-$oDrops = new ThurdyDrop();
-
-if (!$oDrops->getThurdyDrop()) {
-	echo "ERROR!";
-} else {
-	// get random index from array 
-	$randIndex = array_rand($oDrops->aDropRecords);
-
-	// Get the random Drop
-	$oShowcasedDrop = $oDrops->aDropRecords[$randIndex];
+$drops = (new \Datalayer\ThurdyDropRepository())->find();
+$oShowcasedDrop = null;
+if (count($drops) > 0) {
+	$oShowcasedDrop = $drops[array_rand($drops)];
 }
 ?>
 
@@ -307,13 +297,15 @@ $nNumberOfComments = 5;
 					<a href="<?php echo $ROOT ?>/Where.php">MORE...</a>
 				</div>
 				<?php
-				echo "<figure class=\"drop-image\">";
-				echo "  <IMG SRC=" . IMG_DIR . "/drops/{$oShowcasedDrop->sDropImage} />";
-				echo "<figcaption>{$oShowcasedDrop->sDropLocation}<br>";
-				if (!empty($oShowcasedDrop->sDropDesc)) {
-					echo "({$oShowcasedDrop->sDropDesc})</figcaption>";
+				if ($oShowcasedDrop !== null) {
+					echo "<figure class=\"drop-image\">";
+					echo "  <IMG SRC=" . IMG_DIR . "/drops/{$oShowcasedDrop->dropImage} />";
+					echo "<figcaption>{$oShowcasedDrop->dropLocation}<br>";
+					if (!empty($oShowcasedDrop->dropDesc)) {
+						echo "({$oShowcasedDrop->dropDesc})</figcaption>";
+					}
+					echo "</figure>";
 				}
-				echo "</figure>";
 				?>
 			</div>
 		</div>

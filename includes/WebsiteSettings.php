@@ -10,6 +10,7 @@
  define("JS_DIR",$ROOT . "/javascript");
  define("INCLUDE_DIR",$ROOT . "/includes");
  define("CLASS_DIR",$ROOT . "/../offthekitchen.com/classes");
+ define("DATALAYER_DIR",$ROOT . "/../offthekitchen.com/datalayer");
  define("ADMIN_DIR",$ROOT . "/admin");
  define("SETTINGS_DIR",$ROOT . "/../settings");
  define("ART_IMG_DIR",$ROOT . "/images");

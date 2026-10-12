@@ -8,8 +8,8 @@ include_once ("root.inc.php");
 //inlcude web site settings
 include_once (SETTINGS_DIR . "/ThurdySettings.php");
 
-//include COMMENT Class		
-include_once (CLASS_DIR . "/class_ThurdyComment.php");
+include_once (DATALAYER_DIR . "/ThurdyComment.php");
+include_once (DATALAYER_DIR . "/ThurdyCommentRepository.php");
 
 // recaptcha library
 require_once (INCLUDE_DIR . "/recaptchalib.php"); 
@@ -73,11 +73,11 @@ if (!$captcha_error || $debug_on) {
 		{
 
             //Insert DB Record
-            $oNewComment = new ThurdyComment();
-	        $oNewComment->sComment = $_POST['message'];
-	        $oNewComment->bApproved = FALSE;
-	        $oNewComment->dtCommentDate = date('Y-m-d');
-            if(!$oNewComment->insertComment())
+            $oNewComment = new \Datalayer\ThurdyComment();
+	        $oNewComment->comment = $_POST['message'];
+	        $oNewComment->approved = false;
+	        $oNewComment->commentDate = date('Y-m-d');
+            if(!(new \Datalayer\ThurdyCommentRepository())->insert($oNewComment))
             {
                 echo "insert-error";
             }
