@@ -14,49 +14,25 @@ include_once(SETTINGS_DIR . "/ThurdySettings.php");
 //Common Functions
 include(INCLUDE_DIR . "/commonFunctions.php");
 
-//include CD Class
-include_once(CLASS_DIR . "/class_CD.php");
+include_once(DATALAYER_DIR . "/CD.php");
+include_once(DATALAYER_DIR . "/CDRepository.php");
+include_once(DATALAYER_DIR . "/Song.php");
+include_once(DATALAYER_DIR . "/SongRepository.php");
+include_once(DATALAYER_DIR . "/ThurdyDrop.php");
+include_once(DATALAYER_DIR . "/ThurdyDropRepository.php");
 
-//include Song Class
-include_once(CLASS_DIR . "/class_Song.php");
+$cds = (new \Datalayer\CDRepository())->findByArtist(THURDY_ARTIST_ID, false, 'release');
 
-//include Drop Class		
-include_once(CLASS_DIR . "/class_ThurdyDrop.php");
+$singles = (new \Datalayer\SongRepository())->find([
+	'artistId' => THURDY_ARTIST_ID,
+	'cdId' => SINGLES_CD_ID,
+	'active' => true,
+	'displayOnSite' => true,
+	'orderBy' => 'release',
+]);
 
-//include Error Log Class
-include_once(CLASS_DIR . "/class_ErrorLog.php");
-
-
-//Get CDs
-$oCDs = new CD();
-
-$oCDs->sOrderBy = RELEASE_ORDER;
-$oCDs->nArtistID = THURDY_ARTIST_ID;
-if (!$oCDs->getCD()) {
-	$error = new ErrorLog('Music.php', 'getCD()', $oCDs->sErrorMessage, $oCDs->nArtistID, 'Artist');
-	$error->writeErrorLog();
-}
-
-//Get Singles
-$oSingles = new Song();
-$oSingles->nArtistID = THURDY_ARTIST_ID;
-$oSingles->nCDID = SINGLES_CD_ID;
-$oSingles->sOrderBy = RELEASE_ORDER;
-$oSingles->bActive = TRUE;
-$oSingles->bDisplayOnSite = TRUE;
-
-if (!$oSingles->getSong()) {
-	$error = new ErrorLog('Music.php', 'getSong()', $oSingles->sErrorMessage, $oSingles->nCDID, 'CD');
-	$error->writeErrorLog();
-}
-
-//GetDrops
-$oDrops = new ThurdyDrop();
-
-if (!$oDrops->getThurdyDrop()) {
-	$error = new ErrorLog('Music.php', 'getThurdyDrop()', 'Error getting Drops', $oDrops->nDropID, 'Drop');
-	$error->writeErrorLog();
-}
+// Kept for parity with the legacy page (drops were loaded but unused in the markup)
+(new \Datalayer\ThurdyDropRepository())->find();
 
 ?>
 <!DOCTYPE html
@@ -119,9 +95,9 @@ include_once(INCLUDE_DIR . "/Head.php");
 					</div>
 					<?php
 					$nListingNumber = 1;
-					foreach ($oCDs->aCDRecords as $oCD) {
+					foreach ($cds as $oCD) {
 						echo "<div class=\"col-xs-12 col-md-6 full-width-xs\">";
-						echo "<a href=\"{$ROOT}/CD.php?cd-id={$oCD->nCDID}\">";
+						echo "<a href=\"{$ROOT}/CD.php?cd-id={$oCD->id}\">";
 						echo "<aside class=\"music-listing listing-{$nListingNumber}\">";
 						echo renderCDListing($oCD);
 						echo "</aside>";
@@ -132,7 +108,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 					?>
 				</section>
 				<?php
-				if (count($oSingles->aSongRecords) > 0) {
+				if (count($singles) > 0) {
 					?>
 					<section id="song-list" class="row">
 						<div class="col-xs-12">
@@ -142,9 +118,9 @@ include_once(INCLUDE_DIR . "/Head.php");
 						</div>
 						<?php
 						$nListingNumber = 1;
-						foreach ($oSingles->aSongRecords as $oSingle) {
+						foreach ($singles as $oSingle) {
 							echo "<div class=\"col-xs-12 full-width-xs\">";
-							echo "<a href=\"{$ROOT}/Song.php?song-id={$oSingle->nSongID}\">";
+							echo "<a href=\"{$ROOT}/Song.php?song-id={$oSingle->id}\">";
 							echo "<aside class=\"music-listing listing-{$nListingNumber}\">";
 							echo renderSongListing($oSingle);
 							echo "</aside>";

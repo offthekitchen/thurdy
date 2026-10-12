@@ -12,52 +12,41 @@ include_once(SETTINGS_DIR . "/ThurdySettings.php");
 //include common functions
 include_once(INCLUDE_DIR . "/commonFunctions.php");
 
-//include Comment Class		
-include_once(CLASS_DIR . "/class_Song.php");
+include_once(DATALAYER_DIR . "/Song.php");
+include_once(DATALAYER_DIR . "/SongRepository.php");
 
-//include Error Log Class
-include_once(CLASS_DIR . "/class_ErrorLog.php");
-
+$nSongId = null;
 if (isset($_REQUEST['SONG-ID']) && $_REQUEST['SONG-ID'] != "") {
-	$nSongId = preg_replace("/[^0-9.]/", "", $_REQUEST['SONG-ID']);
-} else {
-	$nSongId = null;
+	$nSongId = (int) preg_replace("/[^0-9]/", "", $_REQUEST['SONG-ID']);
 }
 
-//Get the CD ID from the query string parms
+$nCDID = null;
 if (isset($_REQUEST['CD-ID']) && $_REQUEST['CD-ID'] != "") {
-	$nCDID = preg_replace("/[^0-9.]/", "", $_REQUEST['CD-ID']);
-} else {
-	$nCDID = null;
+	$nCDID = (int) preg_replace("/[^0-9]/", "", $_REQUEST['CD-ID']);
 }
 
-$oThurdySongs = new Song();
-$oThurdySongs->nArtistID = THURDY_ARTIST_ID;
+$criteria = [
+	'artistId' => THURDY_ARTIST_ID,
+	'orderBy' => 'track',
+];
 if ($nSongId > 0) {
-	$oThurdySongs->nSongID = $nSongId;
+	$criteria['id'] = $nSongId;
+} elseif ($nCDID > 0) {
+	$criteria['cdId'] = $nCDID;
 }
-if ($nCDID > 0) {
-	$oThurdySongs->nCDID = $nCDID;
-}
-$oThurdySongs->sOrderBy = "SONG_NUMBER";
 
-if (!$oThurdySongs->getSong()) {
-	$error = new ErrorLog('Lyrics.php', 'getSong()', 'Error getting Songs', $oThurdySongs->nCDID, 'CD');
-	$error->writeErrorLog();
-	$oThurdySongs->sSongTitle = "Not Found";
-	$oThurdySongs->sSongDescription = "Hmmm... problem getting that one.";
-}
+$songs = (new \Datalayer\SongRepository())->find($criteria);
 ?>
 <!DOCTYPE html
 	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <?php
 $sPageLogo = "header-logo-200.png";
-if (sizeof($oThurdySongs->aSongRecords) == 1) {
-	$oThisSong = $oThurdySongs->aSongRecords[0];
+if (count($songs) == 1) {
+	$oThisSong = $songs[0];
 	$sPageTitle = "Lyrics";
-	$sPageName = $oThisSong->sSongDescription;
-	$sSongImage = $oThisSong->sSongImage;
+	$sPageName = $oThisSong->description;
+	$sSongImage = $oThisSong->image;
 } else {
 	$sPageTitle = "Lyrics";
 	$sPageName = "Words I Wrote";
@@ -74,18 +63,19 @@ include_once(INCLUDE_DIR . "/Head.php");
 			<div class="col-xs-12">
 				<main role="main">
 					<?php
-					if (sizeof($oThurdySongs->aSongRecords) == 1) {
-						echo "<header class=\"lyrics-title\"><a href='{$ROOT}/Song.php?song-id={$oThisSong->nSongID}'>";
-						echo "$oThisSong->sSongName";
+					if (count($songs) == 1) {
+						$oThisSong = $songs[0];
+						echo "<header class=\"lyrics-title\"><a href='{$ROOT}/Song.php?song-id={$oThisSong->id}'>";
+						echo "$oThisSong->name";
 						echo "</a></header>";
 
-						if (!empty($oThisSong->sLyricsHTML) && file_exists($ROOT . "/lyrics/{$oThisSong->sLyricsHTML}")) {
+						if (!empty($oThisSong->lyricsHtml) && file_exists($ROOT . "/lyrics/{$oThisSong->lyricsHtml}")) {
 							echo "<section class='lyrics-contents'>";
 							try {
-								include_once($ROOT . "/lyrics/{$oThisSong->sLyricsHTML}");
+								include_once($ROOT . "/lyrics/{$oThisSong->lyricsHtml}");
 							} catch (Exception $e) {
-								error_log("lyrics.php - ERROR INCLUDING LYRICS FILE ({$oThisSong->sLyricsHTML}): " . $e->getMessage());
-								echo "ERROR GETTING LYRICS FILE {$oThisSong->sLyricsHTML}";
+								error_log("lyrics.php - ERROR INCLUDING LYRICS FILE ({$oThisSong->lyricsHtml}): " . $e->getMessage());
+								echo "ERROR GETTING LYRICS FILE {$oThisSong->lyricsHtml}";
 							} finally {
 								echo "</section>";
 							}
@@ -94,13 +84,13 @@ include_once(INCLUDE_DIR . "/Head.php");
 							echo "NO LYRICS";
 							echo "</section>";
 						}
-					} elseif (sizeof($oThurdySongs->aSongRecords) > 1) {
+					} elseif (count($songs) > 1) {
 						echo "<dl class=\"lyrics-contents\">";
-						foreach ($oThurdySongs->aSongRecords as $oSong) {
+						foreach ($songs as $oSong) {
 							echo "<div class='song'>";
 							echo "<dt class='song-title'>";
-							echo "<p><a href='{$ROOT}/Lyrics.php?SONG-ID={$oSong->nSongID}'>";
-							echo "{$oSong->sSongName}";
+							echo "<p><a href='{$ROOT}/Lyrics.php?SONG-ID={$oSong->id}'>";
+							echo "{$oSong->name}";
 							echo "</a></p>";
 							echo "</dt>";
 							echo "</div>";

@@ -12,14 +12,11 @@ Date        Change
 *******************************************************************
 */
 
-//include DB Class		
-include_once(CLASS_DIR . "/class_DB.php");
-
-//include Error Class
-include_once(CLASS_DIR . "/class_Error.php");
-
-//include Performance Class
-include_once(CLASS_DIR . "/class_Performance.php");
+include_once(DATALAYER_DIR . "/Connection.php");
+include_once(DATALAYER_DIR . "/Performance.php");
+include_once(DATALAYER_DIR . "/PerformanceRepository.php");
+include_once(DATALAYER_DIR . "/Award.php");
+include_once(DATALAYER_DIR . "/AwardRepository.php");
 
 /*
  ********************************************************************************
@@ -65,9 +62,9 @@ function renderCDListing($oCD)
 {
 	echo "<div class=\"music-item\">";
 	echo "<figure class=\"music-item-thumbnail\">";
-	echo "<img src=\"" . IMG_DIR . "/{$oCD->sCDImage}\" class=\"float-left\">";
+	echo "<img src=\"" . IMG_DIR . "/{$oCD->image}\" class=\"float-left\">";
 	echo "</figure>";
-	echo "<p class=\"music-item-title\">{$oCD->sCDName}</p>";
+	echo "<p class=\"music-item-title\">{$oCD->name}</p>";
 	echo "<p class=\"music-item-year\">MORE...</p>";
 	echo "</div>";
 }
@@ -83,9 +80,9 @@ function renderSongListing($oSong)
 {
 	echo "<div class=\"music-item\">";
 	echo "<figure class=\"music-item-thumbnail\">";
-	echo "<img src=\"" . IMG_DIR . "/{$oSong->sSongImage}\" class=\"cd-cover float-left\">";
+	echo "<img src=\"" . IMG_DIR . "/{$oSong->image}\" class=\"cd-cover float-left\">";
 	echo "</figure>";
-	echo "<p class=\"music-item-title\">{$oSong->sSongName}</p>";
+	echo "<p class=\"music-item-title\">{$oSong->name}</p>";
 	echo "<p class=\"music-item-year\">MORE...</p>";
 	echo "</div>";
 }
@@ -164,13 +161,11 @@ function renderNextPerformance($bRenderScheduleLink, $bCollapseDetails)
 	echo "<a name=\"next-performance\"></a>";
 	echo "<section class=\"performance-listing\">";
 
-	$oPerformance = new Performance();
-	if (!$oPerformance->getNextPerformance()) {
-		error_log('ERRR GETTING NEXT PERFORMANCE IN renderNextPerformance() in CommonFunctions.php');
-	} else if (sizeof($oPerformance->aPerformanceRecords) > 0) {
+	$oPerformance = (new \Datalayer\PerformanceRepository())->findNext(false);
+	if ($oPerformance !== null) {
 		echo "<header class=\"next-show-header\">";
 		echo "<figure class=\"performance-listing-image\"><img src=\"" . IMG_DIR . "/next-performance-image.png\"></figure>";
-		renderPerformanceListing($oPerformance->aPerformanceRecords[0], $bRenderScheduleLink, $bCollapseDetails);
+		renderPerformanceListing($oPerformance, $bRenderScheduleLink, $bCollapseDetails);
 		echo "</header>";
 	} else {
 		echo "<header>";
@@ -197,24 +192,21 @@ function renderNextPerformanceDescription()
 {
 	global $ROOT;
 
-	$oPerformance = new Performance();
-	if (!$oPerformance->getNextPerformance()) {
-		//TODO: What about an error?
-		error_log('ERRR GETTING NEXT PERFORMANCE IN renderNextPerformanceDescription() in CommonFunctions.php');
-	} else if (sizeof($oPerformance->aPerformanceRecords) > 0) {
+	$oPerformance = (new \Datalayer\PerformanceRepository())->findNext(false);
+	if ($oPerformance !== null) {
 		echo "<span class=\"next-performance-description\">Next Performance: ";
 		echo "<span class=\"performance-name\">";
-		if (!empty($oPerformance->aPerformanceRecords[0]->sPerformanceWebsite)) {
-			echo "<a href=\"{$oPerformance->aPerformanceRecords[0]->sPerformanceWebsite}\" name =\"performance-{$oPerformance->aPerformanceRecords[0]->nPerformanceID}\" target=_blank>{$oPerformance->aPerformanceRecords[0]->sPerformanceName}</a>";
+		if (!empty($oPerformance->website)) {
+			echo "<a href=\"{$oPerformance->website}\" name =\"performance-{$oPerformance->id}\" target=_blank>{$oPerformance->name}</a>";
 		} else {
-			echo "<a class=\"no-underline\" name =\"performance-{$oPerformance->aPerformanceRecords[0]->nPerformanceID}\">{$oPerformance->aPerformanceRecords[0]->sPerformanceName}</a>";
+			echo "<a class=\"no-underline\" name =\"performance-{$oPerformance->id}\">{$oPerformance->name}</a>";
 		}
 
-		if (!empty($oPerformance->aPerformanceRecords[0]->sLocationCity)) {
-			echo " - {$oPerformance->aPerformanceRecords[0]->sLocationCity}";
+		if (!empty($oPerformance->locationCity)) {
+			echo " - {$oPerformance->locationCity}";
 		}
-		if (!empty($oPerformance->aPerformanceRecords[0]->sLocationState)) {
-			echo ", {$oPerformance->aPerformanceRecords[0]->sLocationState}";
+		if (!empty($oPerformance->locationState)) {
+			echo ", {$oPerformance->locationState}";
 		}
 		echo "</span>";
 	}
@@ -232,37 +224,37 @@ function renderPerformanceListing($oPerformance, $bRenderScheduleLink, $bCollaps
 
 	if (!empty($oPerformance)) {
 		// Generate a Geocode for the performance based on the address
-		$performanceGeocodeURL = buildGeocode($oPerformance->sLocationAddr1, $oPerformance->sLocationAddr2, $oPerformance->sLocationCity, $oPerformance->sLocationState, $oPerformance->sLocationZip);
+		$performanceGeocodeURL = buildGeocode($oPerformance->locationAddr1, $oPerformance->locationAddr2, $oPerformance->locationCity, $oPerformance->locationState, $oPerformance->locationZip);
 
 		//Display Basic Performance Info
 		echo "<div class=\"performance-info\">";
 		echo "<span class=\"performance-name\">";
-		if (!empty($oPerformance->sPerformanceWebsite)) {
-			echo "<a href=\"{$oPerformance->sPerformanceWebsite}\" name =\"performance-{$oPerformance->nPerformanceID}\" target=_blank>{$oPerformance->sPerformanceName}</a>";
+		if (!empty($oPerformance->website)) {
+			echo "<a href=\"{$oPerformance->website}\" name =\"performance-{$oPerformance->id}\" target=_blank>{$oPerformance->name}</a>";
 		} else {
-			echo "<a class=\"no-underline\" name =\"performance-{$oPerformance->nPerformanceID}\">{$oPerformance->sPerformanceName}</a>";
+			echo "<a class=\"no-underline\" name =\"performance-{$oPerformance->id}\">{$oPerformance->name}</a>";
 		}
 
-		if (!empty($oPerformance->sLocationCity)) {
-			echo " - {$oPerformance->sLocationCity}";
+		if (!empty($oPerformance->locationCity)) {
+			echo " - {$oPerformance->locationCity}";
 		}
-		if (!empty($oPerformance->sLocationState)) {
-			echo ", {$oPerformance->sLocationState}";
+		if (!empty($oPerformance->locationState)) {
+			echo ", {$oPerformance->locationState}";
 		}
 		echo "</span>";
 
-		echo "<div>" . date("m-d-Y", strtotime($oPerformance->dtPerformanceDate)) . " (" . date("l", strtotime($oPerformance->dtPerformanceDate)) . "), {$oPerformance->sPerformanceTime}</div>";
+		echo "<div>" . date("m-d-Y", strtotime($oPerformance->performanceDate)) . " (" . date("l", strtotime($oPerformance->performanceDate)) . "), {$oPerformance->performanceTime}</div>";
 		echo "</div><!--End performance-info-->";
 
 		//If the Performance was in the past display message, other wise render a collapsable details section		
-		if (date("Y-mm-dd") > date("Y-mm-dd", strtotime($oPerformance->dtPerformanceDate))) {
+		if (date("Y-mm-dd") > date("Y-mm-dd", strtotime($oPerformance->performanceDate))) {
 			echo "<div class=\"performance-message\">";
 			echo "<p>This performance occurred in the past</p>";
 			echo "</div>";
 		} else {
 			echo "<div>";
 			if ($bCollapseDetails) {
-				echo "<button class=\"button details-button\" data-toggle=\"collapse\" data-target=\"#more-details-{$oPerformance->nPerformanceID}\">Details</button>";
+				echo "<button class=\"button details-button\" data-toggle=\"collapse\" data-target=\"#more-details-{$oPerformance->id}\">Details</button>";
 			}
 			if ($bRenderScheduleLink) {
 				echo "<span class=\"spacer\">";
@@ -273,15 +265,15 @@ function renderPerformanceListing($oPerformance, $bRenderScheduleLink, $bCollaps
 
 			echo "<div class=\"performance-details-container\">";
 			echo "<div class=\"performance-details\">";
-			echo "<div id=\"more-details-{$oPerformance->nPerformanceID}\"";
+			echo "<div id=\"more-details-{$oPerformance->id}\"";
 			if ($bCollapseDetails) {
 				echo " class=\"collapse\"";
 			}
 			echo ">";
-			echo "<p>{$oPerformance->sDescription}<br><p>";
+			echo "<p>{$oPerformance->description}<br><p>";
 
 			//Render Google Map
-			if (!empty($oPerformance->sLocationAddr1)) {
+			if (!empty($oPerformance->locationAddr1)) {
 				echo "<div class=\"inline-block map-icon\">";
 				echo "<a href =\"http://maps.google.com/maps?f=q&hl=en&geocode=&q={$performanceGeocodeURL}\" target=\"_blank\">";
 				echo "<img src=\"" . IMG_DIR . "/Map.gif\" border=0></a>";
@@ -290,29 +282,29 @@ function renderPerformanceListing($oPerformance, $bRenderScheduleLink, $bCollaps
 
 			//Render Location
 			echo "<div class=\"inline-block performance-location\">";
-			if (!empty($oPerformance->sLocationWebsite)) {
-				echo "<A HREF={$oPerformance->sLocationWebsite} TARGET=_blank>{$oPerformance->sLocation}</A><br>";
+			if (!empty($oPerformance->locationWebsite)) {
+				echo "<A HREF={$oPerformance->locationWebsite} TARGET=_blank>{$oPerformance->location}</A><br>";
 			} else {
-				echo "$oPerformance->sLocation<br>";
+				echo "$oPerformance->location<br>";
 			}
 
-			if (!empty($oPerformance->sLocationAddr1) || !empty($oPerformance->sLocationAddr2) || !empty($oPerformance->sLocationCity)) {
-				if (!empty($oPerformance->sLocationAddr1)) {
-					echo "{$oPerformance->sLocationAddr1}<BR>";
+			if (!empty($oPerformance->locationAddr1) || !empty($oPerformance->locationAddr2) || !empty($oPerformance->locationCity)) {
+				if (!empty($oPerformance->locationAddr1)) {
+					echo "{$oPerformance->locationAddr1}<BR>";
 				}
 
-				if (!empty($oPerformance->sLocationAddr2)) {
-					echo "{$oPerformance->sLocationAddr2}<BR>";
+				if (!empty($oPerformance->locationAddr2)) {
+					echo "{$oPerformance->locationAddr2}<BR>";
 				}
 
-				if (!empty($oPerformance->sLocationCity)) {
-					echo $oPerformance->sLocationCity;
+				if (!empty($oPerformance->locationCity)) {
+					echo $oPerformance->locationCity;
 
-					if (!empty($oPerformance->sLocationState)) {
-						echo ", {$oPerformance->sLocationState}";
+					if (!empty($oPerformance->locationState)) {
+						echo ", {$oPerformance->locationState}";
 					}
-					if (!empty($oPerformance->sLocationZip)) {
-						echo " {$oPerformance->sLocationZip}";
+					if (!empty($oPerformance->locationZip)) {
+						echo " {$oPerformance->locationZip}";
 					}
 				}
 			}
@@ -320,22 +312,22 @@ function renderPerformanceListing($oPerformance, $bRenderScheduleLink, $bCollaps
 
 			//Render Contact and Admission
 			echo "<div class=\"inline-block\">";
-			if (!empty($oPerformance->sAdmission)) {
-				echo "<b>Admission:</b> {$oPerformance->sAdmission}<br>";
+			if (!empty($oPerformance->admission)) {
+				echo "<b>Admission:</b> {$oPerformance->admission}<br>";
 			}
-			if (!empty($oPerformance->sContactEmail)) {
-				echo "<b>Email:</b> <A CLASS=\"performance-email\" HREF=mailto:{$oPerformance->sContactEmail}>";
-				if (!empty($oPerformance->sContactName)) {
-					echo $oPerformance->sContactName;
+			if (!empty($oPerformance->contactEmail)) {
+				echo "<b>Email:</b> <A CLASS=\"performance-email\" HREF=mailto:{$oPerformance->contactEmail}>";
+				if (!empty($oPerformance->contactName)) {
+					echo $oPerformance->contactName;
 				} else {
-					echo $oPerformance->sContactEmail;
+					echo $oPerformance->contactEmail;
 				}
 				echo "</A>";
 				echo "<BR>";
 			}
 
-			if (!empty($oPerformance->sContactPhone)) {
-				echo "<b>Phone:</b> {$oPerformance->sContactPhone}";
+			if (!empty($oPerformance->contactPhone)) {
+				echo "<b>Phone:</b> {$oPerformance->contactPhone}";
 			}
 			echo "</div><!--End Contact Div-->";
 
@@ -478,17 +470,17 @@ function buildGeocode($address1, $address2, $city, $state, $zip)
 function renderReview(&$oReview)
 {
 	echo "<blockquote>";
-	echo "<span>{$oReview->sReviewExcerpt}</span> ";
-	if (!empty($oReview->sReviewURL)) {
-		if ($oReview->bInternalReviewUrl) {
-			echo "<span class=\"read-more-quote\"><a href=\"full-review.php?REVIEW_ID=" . $oReview->nReviewID . "\">Read More...</a></span>";
+	echo "<span>{$oReview->excerpt}</span> ";
+	if (!empty($oReview->url)) {
+		if ($oReview->internalReviewUrl) {
+			echo "<span class=\"read-more-quote\"><a href=\"full-review.php?REVIEW_ID=" . $oReview->id . "\">Read More...</a></span>";
 		} else {
-			echo "<span class=\"read-more-quote\"><a href=\"{$oReview->sReviewURL}\" target=\"_blank\">Read More...</a></span>";
+			echo "<span class=\"read-more-quote\"><a href=\"{$oReview->url}\" target=\"_blank\">Read More...</a></span>";
 		}
 	}
-	echo "<cite>{$oReview->sReviewAuthor}";
-	if (!empty($oReview->sReviewSource)) {
-		echo " ({$oReview->sReviewSource})";
+	echo "<cite>{$oReview->author}";
+	if (!empty($oReview->source)) {
+		echo " ({$oReview->source})";
 	}
 	echo "</cite>";
 	echo "</blockquote>";
@@ -537,21 +529,21 @@ function renderAward(&$oAward, $sSize)
 {
 	echo "<div class=\"award-item\">";
 	echo "<span class=\"award-icon award-icon-{$sSize}\">";
-	if (empty($oAward->sAwardImage)) {
-		$oAward->sAwardImage = DEFAULT_AWARD_IMAGE;
+	if (empty($oAward->image)) {
+		$oAward->image = DEFAULT_AWARD_IMAGE;
 	}
-	echo "<img src=\"" . IMG_DIR . "/{$oAward->sAwardImage}\">";
+	echo "<img src=\"" . IMG_DIR . "/{$oAward->image}\">";
 	echo "</span>";
 	echo "<span class=\"award-name award-name-{$sSize}\">";
-	if (!empty($oAward->sAwardURL)) {
-		echo "<a href=\"$oAward->sAwardURL\" target=\"_blank\">{$oAward->sAwardName}</a>";
+	if (!empty($oAward->url)) {
+		echo "<a href=\"$oAward->url\" target=\"_blank\">{$oAward->name}</a>";
 	} else {
-		echo "{$oAward->sAwardName}";
+		echo "{$oAward->name}";
 	}
 	echo "</span>";
 	if ($sSize == AWARD_SIZE_LARGE) {
 		echo "<div class=\"award-description\">";
-		echo "{$oAward->sAwardDescription}";
+		echo "{$oAward->description}";
 		echo "</div>";
 	}
 	echo "</div>";
@@ -566,41 +558,24 @@ function renderAward(&$oAward, $sSize)
  */
 function renderAwards($nAwardType, $nEntityID, $sSize)
 {
-	switch ($nAwardType) {
-		case AWARD_TYPE_CD:
-			$oAwards = new Award();
-			$oAwards->nCDID = $nEntityID;
-			if (!$oAwards->getAward()) {
-				//TODO: ERROR or Default
-			} else if (sizeof($oAwards->aAwardRecords) > 0) {
-				echo "<div class=\"awards-list\">";
-				foreach ($oAwards->aAwardRecords as $oAward) {
-					renderAward($oAward, $sSize);
-				}
-				echo "</div>";
-			} else {
-				//TODO: Get Song Awards
-			}
-			break;
+	$criteria = match ($nAwardType) {
+		AWARD_TYPE_CD => ['cdId' => $nEntityID],
+		AWARD_TYPE_SONG => ['songId' => $nEntityID],
+		default => null,
+	};
 
-		case AWARD_TYPE_SONG:
-			$oAwards = new Award();
-			$oAwards->nSongID = $nEntityID;
-			if (!$oAwards->getAward()) {
-				//TODO: ERROR or Default
-			} else if (sizeof($oAwards->aAwardRecords) > 0) {
-				echo "<div class=\"awards-list\">";
-				foreach ($oAwards->aAwardRecords as $oAward) {
-					renderAward($oAward, $sSize);
-				}
-				echo "</div>";
-			}
-
-			break;
-
-		default:
+	if ($criteria === null) {
+		return;
 	}
 
+	$awards = (new \Datalayer\AwardRepository())->find($criteria);
+	if (count($awards) > 0) {
+		echo "<div class=\"awards-list\">";
+		foreach ($awards as $oAward) {
+			renderAward($oAward, $sSize);
+		}
+		echo "</div>";
+	}
 }
 
 /*

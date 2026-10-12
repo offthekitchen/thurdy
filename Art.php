@@ -10,16 +10,14 @@ include_once($ROOT . "/includes/WebsiteSettings.php");
 include_once(SETTINGS_DIR . "/ThurdySettings.php");
 
 //Common Functions
-include (INCLUDE_DIR . "/commonFunctions.php");
+include(INCLUDE_DIR . "/commonFunctions.php");
 
-//include Song Class
-include_once (CLASS_DIR . "/class_Song.php");
-
-//include Thurdy Drop Class
-include_once (CLASS_DIR . "/class_ThurdyDrop.php");
-
-//include Thurdy Song Data Class
-include_once (CLASS_DIR . "/class_ThurdySongData.php");
+include_once(DATALAYER_DIR . "/Song.php");
+include_once(DATALAYER_DIR . "/SongRepository.php");
+include_once(DATALAYER_DIR . "/ThurdyDrop.php");
+include_once(DATALAYER_DIR . "/ThurdyDropRepository.php");
+include_once(DATALAYER_DIR . "/ThurdySongData.php");
+include_once(DATALAYER_DIR . "/ThurdySongDataRepository.php");
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -48,17 +46,17 @@ include_once(INCLUDE_DIR . "/Head.php");
 					</p>
 				</div>		
 					<?php
-						//Load Thurdy Song Data
-						$oThurdySongData = new ThurdySongData();
-						$oThurdySongData->getThurdySongData();
-						if (sizeof($oThurdySongData->aThurdySongDataRecords) > 0)
-						{
+						$songDataRows = (new \Datalayer\ThurdySongDataRepository())->find();
+						$songRepo = new \Datalayer\SongRepository();
+						$dropRepo = new \Datalayer\ThurdyDropRepository();
 
-							foreach ($oThurdySongData->aThurdySongDataRecords as $oThisThurdySongData)
+						if (count($songDataRows) > 0)
+						{
+							foreach ($songDataRows as $oThisThurdySongData)
 							{
-								if (!empty($oThisThurdySongData->nDropId) || !empty($oThisThurdySongData->sArtImage)){
+								if (!empty($oThisThurdySongData->dropId) || !empty($oThisThurdySongData->artImage)){
 									echo "<div class=\"row\">";
-									if (!empty($oThisThurdySongData->nDropId) && !empty($oThisThurdySongData->sArtImage)){
+									if (!empty($oThisThurdySongData->dropId) && !empty($oThisThurdySongData->artImage)){
 										$sMediumClass = "col-md-6";
 									}
 									else {
@@ -66,38 +64,34 @@ include_once(INCLUDE_DIR . "/Head.php");
 									}
 
 									
-									if (!empty($oThisThurdySongData->sArtImage))
+									if (!empty($oThisThurdySongData->artImage))
 									{
-										$oSongs = new Song();
-										$oSongs->nSongID = $oThisThurdySongData->nSongId;
-										$oSongs->getSong();
+										$oSong = $songRepo->findById((int) $oThisThurdySongData->songId);
 
 										echo "<div class=\"col-xs-12 {$sMediumClass}\" style=\"text-align: center;\">";
 										echo "<figure class=\"drop-image\" style=\"height: auto;\">";
-										echo "<IMG SRC=\"" . IMG_DIR . "/{$oThisThurdySongData->sArtImage}\">";
-										echo "<figcaption>{$oSongs->aSongRecords[0]->sSongName}<br>";	
+										echo "<IMG SRC=\"" . IMG_DIR . "/{$oThisThurdySongData->artImage}\">";
+										if ($oSong !== null) {
+											echo "<figcaption>{$oSong->name}<br>";
+										}
 										echo "</figure>";
 										echo "</div>";						
 									}
 
-									if (!empty($oThisThurdySongData->nDropId))
+									if (!empty($oThisThurdySongData->dropId))
 									{
 										echo "<div class=\"col-xs-12 {$sMediumClass}\" style=\"text-align: center; max-height: 300px;\">";
 
-										$oThurdyDrop = new ThurdyDrop();
-										$oThurdyDrop->nDropID = $oThisThurdySongData->nDropId;
-										$oThurdyDrop->getThurdyDrop();
+										$oThisThurdyDrop = $dropRepo->findById((int) $oThisThurdySongData->dropId);
 
-										if (sizeof($oThurdyDrop->aDropRecords) > 0)
+										if ($oThisThurdyDrop !== null)
 										{
-											$oThisThurdyDrop = $oThurdyDrop->aDropRecords[0];
-
 											echo "<div>";
 											echo "<figure class=\"drop-image\" style=\"height: auto;\">";
-											echo "  <IMG SRC=" . IMG_DIR  . "/{$oThisThurdyDrop->sDropImage} />";
-											echo "<figcaption>{$oThisThurdyDrop->sDropLocation}<br>";
-											if (!empty($oThisThurdyDrop->sDropDesc)) {
-												echo "({$oThisThurdyDrop->sDropDesc})</figcaption>";
+											echo "  <IMG SRC=\"" . IMG_DIR  . "/drops/{$oThisThurdyDrop->dropImage}\" />";
+											echo "<figcaption>{$oThisThurdyDrop->dropLocation}<br>";
+											if (!empty($oThisThurdyDrop->dropDesc)) {
+												echo "({$oThisThurdyDrop->dropDesc})</figcaption>";
 											}		
 											echo "</figure>";
 											echo "</div>";

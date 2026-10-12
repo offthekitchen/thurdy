@@ -23,21 +23,22 @@ function validate_form ( )
 //-->
 </script>
 <?php 
-//include COMMENT Class		
-include_once (CLASS_DIR . "/class_ThurdyComment.php");
+include_once (DATALAYER_DIR . "/ThurdyComment.php");
+include_once (DATALAYER_DIR . "/ThurdyCommentRepository.php");
 
 $sCommentText = NULL;
+$commentRepo = new \Datalayer\ThurdyCommentRepository();
 
 //Update Comment
 if (isset($_POST["btnComment"])) 
 {
-	$oNewComment = new ThurdyComment();
-	$oNewComment->sComment = $_POST['txtComment'];
-	$oNewComment->bApproved = 0;
-	$oNewComment->dtCommentDate = date('Y-m-d');
-	if(!$oNewComment->insertComment())
+	$oNewComment = new \Datalayer\ThurdyComment();
+	$oNewComment->comment = $_POST['txtComment'];
+	$oNewComment->approved = false;
+	$oNewComment->commentDate = date('Y-m-d');
+	if(!$commentRepo->insert($oNewComment))
 	{
-		$sCommentText =  $oNewComment->sErrorMessage;
+		$sCommentText = "Problem saving comment.";
 	}
 	else
 	{
@@ -58,16 +59,11 @@ if (isset($_POST["btnComment"]))
 }
 
 //Get all Comments
-$oApprovedComments = new ThurdyComment();
-$oApprovedComments->bApproved = TRUE;
-
+$criteria = ['approved' => true];
 if($nNumberOfComments > 0) {
-	$oApprovedComments->nNumberOfComments = $nNumberOfComments;
+	$criteria['limit'] = $nNumberOfComments;
 }
-if(!$oApprovedComments->getThurdyComment())
-{
-	echo "PROBLEM";
-}
+$approvedComments = $commentRepo->find($criteria);
 ?>
 
 <div class="row">
@@ -83,17 +79,17 @@ if(!$oApprovedComments->getThurdyComment())
 </div>
 <article id="comments">
 	<?php
-	if(sizeof($oApprovedComments->aCommentRecords) > 0)
+	if(count($approvedComments) > 0)
 	{
-		foreach($oApprovedComments->aCommentRecords as $oComment)
+		foreach($approvedComments as $oComment)
 		{
 			echo "<section class=\"comment row\">";
 			echo "<section class=\"comment-gutter hidden-xs col-sm-1 col-md-1 col-lg-1\"></section>";
-			echo "<section class=\"comment-date col-xs-12 col-sm-2 col-md-2 col-lg-2\"><time datetime=\"{$oComment->dtCommentDate}\">{$oComment->dtCommentDate}</time>:</section>";
-			echo "<section class=\"comment-text col-xs-12 col-sm-9 col-md-9 col-lg-9\">$oComment->sComment";
-			if (!empty($oComment->sAnswer))
+			echo "<section class=\"comment-date col-xs-12 col-sm-2 col-md-2 col-lg-2\"><time datetime=\"{$oComment->commentDate}\">{$oComment->commentDate}</time>:</section>";
+			echo "<section class=\"comment-text col-xs-12 col-sm-9 col-md-9 col-lg-9\">$oComment->comment";
+			if (!empty($oComment->answer))
 			{
-			  echo "<aside class=\"comment-answer\">Answer: <span class=\"answer-text\">{$oComment->sAnswer}</span>";
+			  echo "<aside class=\"comment-answer\">Answer: <span class=\"answer-text\">{$oComment->answer}</span>";
 			}
 			echo "</section>";
 			echo "</section>";
@@ -115,4 +111,3 @@ if(!$oApprovedComments->getThurdyComment())
 	}
 	?>
 </article>
-

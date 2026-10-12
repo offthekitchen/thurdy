@@ -12,283 +12,230 @@ include_once(SETTINGS_DIR . "/ThurdySettings.php");
 //Common Functions
 include(INCLUDE_DIR . "/commonFunctions.php");
 
-//include Song Class
-include_once(CLASS_DIR . "/class_Song.php");
+include_once(DATALAYER_DIR . "/Song.php");
+include_once(DATALAYER_DIR . "/SongRepository.php");
+include_once(DATALAYER_DIR . "/CD.php");
+include_once(DATALAYER_DIR . "/CDRepository.php");
+include_once(DATALAYER_DIR . "/Review.php");
+include_once(DATALAYER_DIR . "/ReviewRepository.php");
+include_once(DATALAYER_DIR . "/ThurdySongData.php");
+include_once(DATALAYER_DIR . "/ThurdySongDataRepository.php");
+include_once(DATALAYER_DIR . "/ThurdyDrop.php");
+include_once(DATALAYER_DIR . "/ThurdyDropRepository.php");
 
-//include Review Class
-include_once(CLASS_DIR . "/class_Review.php");
-
-//include Award Class
-include_once(CLASS_DIR . "/class_Award.php");
-
-//include CD Class
-include_once(CLASS_DIR . "/class_CD.php");
-
-//include Thurdy Song Data Class
-include_once(CLASS_DIR . "/class_ThurdySongData.php");
-
-//include Thurdy Drop Class
-include_once(CLASS_DIR . "/class_ThurdyDrop.php");
-
-//include Error Log Class
-include_once(CLASS_DIR . "/class_ErrorLog.php");
-
-$oSongs = new Song();
-$oSongs->nArtistID = THURDY_ARTIST_ID;
-
-//If a Song ID is passed, display information for that Song
+$songRepo = new \Datalayer\SongRepository();
+$songId = DEFAULT_SONG_ID;
 if (isset($_REQUEST['song-id']) && $_REQUEST['song-id'] != "") {
-	$oSongs->nSongID = preg_replace("/[^0-9.]/", "", $_REQUEST['song-id']);
+	$songId = (int) preg_replace("/[^0-9]/", "", $_REQUEST['song-id']);
 }
 
-if (!$oSongs->getSong()) {
-	$error = new ErrorLog('Song.php', 'getSong()', 'Error Retrieving Song', $oSongs->nSongID, 'SONG');
-	$error->writeErrorLog();
-} else {
-	// Try again with default song
-	if (sizeof($oSongs->aSongRecords) == 0) {
-		$oSongs->nSongID = DEFAULT_SONG_ID;
-		if (!$oSongs->getSong()) {
-			$error = new ErrorLog('Song.php', 'getSong()', 'Error Retrieving Song', $oSongs->nSongID, 'SONG');
-			$error->writeErrorLog();
+$oThisSong = $songRepo->findById($songId);
+if ($oThisSong === null && $songId !== DEFAULT_SONG_ID) {
+	$oThisSong = $songRepo->findById(DEFAULT_SONG_ID);
+}
+
+$oThisCD = null;
+$oThisThurdySongData = null;
+
+if ($oThisSong !== null) {
+	$sPageName = "{$oThisSong->name}";
+	$sPageDescription = "{$oThisSong->description}";
+	$sPageTitle = "$oThisSong->name";
+	$sPageLogo = "logo-music.png";
+	if (!empty($oThisSong->image)) {
+		$fb_image = $oThisSong->image;
+	}
+
+	if ($oThisSong->cdId !== null && $oThisSong->cdId !== SINGLES_CD_ID) {
+		$oThisCD = (new \Datalayer\CDRepository())->findById($oThisSong->cdId);
+		if ($oThisCD !== null) {
+			$sCDBreadcrumbItem = array($oThisCD->name, 'cd.php?cd-id=' . $oThisCD->id);
 		}
 	}
 
-	if (sizeof($oSongs->aSongRecords) > 0) {
-		$oThisSong = new Song();
-		$oThisSong = $oSongs->aSongRecords[0];
-		$sPageName = "{$oThisSong->sSongName}";
-		$sPageDescription = "{$oThisSong->sSongDescription}";
-		$sPageTitle = "$oThisSong->sSongName";
-		$sPageLogo = "logo-music.png";
-		if (!empty($oThisSong->sSongImage)) {
-			$fb_image = $oThisSong->sSongImage;
-		}
+	$songDataRows = (new \Datalayer\ThurdySongDataRepository())->find(['songId' => $oThisSong->id]);
+	if (count($songDataRows) > 0) {
+		$oThisThurdySongData = $songDataRows[0];
+	}
+	?>
+	<!DOCTYPE html
+		PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml">
+	<?php
+	include_once(INCLUDE_DIR . "/Head.php");
+	?>
+	<link href="<?php echo CSS_DIR; ?>/bootstrap3_player.css" rel="stylesheet">
 
+	<body>
+		<div class="container">
+			<div class="row">
+				<?php include_once(INCLUDE_DIR . "/Header.php"); ?>
+			</div>
+			<div class="row">
 
-		if ($oThisSong->nCDID <> SINGLES_CD_ID) {
-			$oCD = new CD();
-			$oCD->nCDID = $oThisSong->nCDID;
-			if ($oCD->getCD()) {
-				$oThisCD = $oCD->aCDRecords[0];
-				$sCDBreadcrumbItem = array($oThisCD->sCDName, 'cd.php?cd-id=' . $oThisCD->nCDID);
-			}
-		}
-
-		//Load Thurdy Song Data
-		$oThurdySongData = new ThurdySongData();
-		$oThurdySongData->nSongId = $oThisSong->nSongID;
-		$oThurdySongData->getThurdySongData();
-		if (sizeof($oThurdySongData->aThurdySongDataRecords) > 0) {
-			$oThisThurdySongData = $oThurdySongData->aThurdySongDataRecords[0];
-		}
-
-		?>
-		<!DOCTYPE html
-			PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-		<html xmlns="http://www.w3.org/1999/xhtml">
-		<?php
-		include_once(INCLUDE_DIR . "/Head.php");
-		?>
-		<link href="<?php echo CSS_DIR; ?>/bootstrap3_player.css" rel="stylesheet">
-
-		<body>
-			<div class="container">
-				<div class="row">
-					<?php include_once(INCLUDE_DIR . "/Header.php"); ?>
-				</div>
-				<div class="row">
-
-					<?php
-					if (!empty($oThisSong->sSongImage)) {
-						echo "<div class=\"col-xs-12 col-md-4\">";
-						echo "<div class=\"song-image\">";
-						echo "<img src=\"" . IMG_DIR . "/{$oThisSong->sSongImage}\">";
-						echo "</div>";
-						echo "</div>";
-					}
-					if (!empty($oThisSong->sSongDescription)) {
-						echo "<div class=\"col-xs-12 col-md-8\">";
-						echo "<div class=\"song-description\">";
-						echo $oThisSong->sSongDescription;
-						renderAwards(AWARD_TYPE_SONG, $oThisSong->nSongID, AWARD_SIZE_LARGE);
-						echo "</div>";
-						echo "</div>";
-					}
-					?>
-					<div class="col-xs-12">
-						<main role="main">
-							<?php
-							if (!empty($oThisSong->sSampleMP3)) {
-								?>
-								<div class="row">
-									<div class="col-xs-12">
-										<h2 class="listen">Listen to "<?php echo $oThisSong->sSongName; ?>"</h2>
-										<!--<div class="mp3-player-container">-->
-										<audio controls data-info-att="Music: Thurdy" data-info-att-link="https://www.thurdy.com">
-											<source src="<?php echo MP3_DIR . "/{$oThisSong->sSampleMP3}"; ?>" type="audio/mpeg" />
-											<a
-												href="<?php echo MP3_DIR . "/{$oThisSong->sSampleMP3}"; ?>"><?php echo $oThisSong->sSongName; ?></a>
-											An html5-capable browser is required to play this audio.
-										</audio>
-										<!--</div>-->
-									</div>
-								</div>
-
-
-								<?php
-							}
+				<?php
+				if (!empty($oThisSong->image)) {
+					echo "<div class=\"col-xs-12 col-md-4\">";
+					echo "<div class=\"song-image\">";
+					echo "<img src=\"" . IMG_DIR . "/{$oThisSong->image}\">";
+					echo "</div>";
+					echo "</div>";
+				}
+				if (!empty($oThisSong->description)) {
+					echo "<div class=\"col-xs-12 col-md-8\">";
+					echo "<div class=\"song-description\">";
+					echo $oThisSong->description;
+					renderAwards(AWARD_TYPE_SONG, $oThisSong->id, AWARD_SIZE_LARGE);
+					echo "</div>";
+					echo "</div>";
+				}
+				?>
+				<div class="col-xs-12">
+					<main role="main">
+						<?php
+						if (!empty($oThisSong->sampleMp3)) {
 							?>
 							<div class="row">
 								<div class="col-xs-12">
-									<section id="song-buttons">
-										<?php
-										if (!empty($oThisSong->sPurchaseLink)) {
-											$sPurchaseLink = $oThisSong->sPurchaseLink;
-										}
-										if (!empty($sPurchaseLink)) {
-											renderPurchaseButton($sPurchaseLink);
-										}
-										if (!empty($oThisSong->sLyricsHTML)) {
-											renderLyricsButton(LYRICS_TYPE_SONG, $oThisSong->nSongID);
-										}
-
-										?>
-									</section>
-
+									<h2 class="listen">Listen to "<?php echo $oThisSong->name; ?>"</h2>
+									<audio controls data-info-att="Music: Thurdy" data-info-att-link="https://www.thurdy.com">
+										<source src="<?php echo MP3_DIR . "/{$oThisSong->sampleMp3}"; ?>" type="audio/mpeg" />
+										<a
+											href="<?php echo MP3_DIR . "/{$oThisSong->sampleMp3}"; ?>"><?php echo $oThisSong->name; ?></a>
+										An html5-capable browser is required to play this audio.
+									</audio>
 								</div>
 							</div>
-
-							<div class="row">
-								<div class="col-xs-12" style="margin-bottom: 15px">
+							<?php
+						}
+						?>
+						<div class="row">
+							<div class="col-xs-12">
+								<section id="song-buttons">
 									<?php
-									if (!empty($oThisThurdySongData->sVideoLink)) {
-										echo "<h2 class=\"listen\">Watch \"" . $oThisSong->sSongName . "\"</h2>";
-										echo "<iframe width=100% height=\"315px\" src=\"" . $oThisThurdySongData->sVideoLink . "\" frameborder=\"0\" allow=\"accelerometer; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>";
+									if (!empty($oThisSong->purchaseLink)) {
+										renderPurchaseButton($oThisSong->purchaseLink);
+									}
+									if (!empty($oThisSong->lyricsHtml)) {
+										renderLyricsButton(LYRICS_TYPE_SONG, $oThisSong->id);
 									}
 									?>
-								</div>
+								</section>
 							</div>
+						</div>
 
-							<div class="row">
-								<div class="col-xs-12">
-									<?php
-									if (!empty($oThisThurdySongData->nDropId) || !empty($oThisThurdySongData->sArtImage)) {
-										echo "<h3 class=\"listen\">Did you find \"{$oThisSong->sSongName}\"?</h3>";
-										if (!empty($oThisThurdySongData->nDropId)) {
-											echo "<div class=\"col-xs-12\" style=\"text-align: center;\">";
+						<div class="row">
+							<div class="col-xs-12" style="margin-bottom: 15px">
+								<?php
+								if ($oThisThurdySongData !== null && !empty($oThisThurdySongData->videoLink)) {
+									echo "<h2 class=\"listen\">Watch \"" . $oThisSong->name . "\"</h2>";
+									echo "<iframe width=100% height=\"315px\" src=\"" . $oThisThurdySongData->videoLink . "\" frameborder=\"0\" allow=\"accelerometer; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>";
+								}
+								?>
+							</div>
+						</div>
 
-											$oThurdyDrop = new ThurdyDrop();
-											$oThurdyDrop->nDropID = $oThisThurdySongData->nDropId;
-											$oThurdyDrop->getThurdyDrop();
-
-											if (sizeof($oThurdyDrop->aDropRecords) > 0) {
-												$oThisThurdyDrop = $oThurdyDrop->aDropRecords[0];
-
-												echo "<div class=\"col-xs-12\">";
-												echo "<figure class=\"drop-image\" style=\"height: auto;\">";
-												echo "  <IMG SRC=" . IMG_DIR . "/{$oThisThurdyDrop->sDropImage} />";
-												echo "<figcaption>{$oThisThurdyDrop->sDropLocation}<br>";
-												if (!empty($oThisThurdyDrop->sDropDesc)) {
-													echo "({$oThisThurdyDrop->sDropDesc})</figcaption>";
-												}
-												echo "</figure>";
-												echo "</div>";
+						<div class="row">
+							<div class="col-xs-12">
+								<?php
+								if ($oThisThurdySongData !== null && (!empty($oThisThurdySongData->dropId) || !empty($oThisThurdySongData->artImage))) {
+									echo "<h3 class=\"listen\">Did you find \"{$oThisSong->name}\"?</h3>";
+									if (!empty($oThisThurdySongData->dropId)) {
+										echo "<div class=\"col-xs-12\" style=\"text-align: center;\">";
+										$oThisThurdyDrop = (new \Datalayer\ThurdyDropRepository())->findById($oThisThurdySongData->dropId);
+										if ($oThisThurdyDrop !== null) {
+											echo "<div class=\"col-xs-12\">";
+											echo "<figure class=\"drop-image\" style=\"height: auto;\">";
+											echo "  <IMG SRC=\"" . IMG_DIR . "/drops/{$oThisThurdyDrop->dropImage}\" />";
+											echo "<figcaption>{$oThisThurdyDrop->dropLocation}<br>";
+											if (!empty($oThisThurdyDrop->dropDesc)) {
+												echo "({$oThisThurdyDrop->dropDesc})</figcaption>";
 											}
+											echo "</figure>";
 											echo "</div>";
 										}
-										if (!empty($oThisThurdySongData->sArtImage)) {
-											echo "<div class=\"col-xs-12\" style=\"text-align: center;\">";
-											echo "<IMG SRC=\"" . IMG_DIR . "/{$oThisThurdySongData->sArtImage}\">";
-											echo "</div>";
-
-										}
-									}
-									?>
-								</div>
-							</div>
-
-							<div class="row">
-								<div class="col-xs-12">
-									<?php
-									if (!empty($oThisThurdySongData->sLiveVersion)) {
-										echo "<h3 class=\"listen\">Did you hear \"{$oThisSong->sSongName}\" live?</h3>";
-										?>
-										<audio controls data-info-att="Music: Thurdy" data-info-att-link="https://www.thurdy.com">
-											<source src="<?php echo MP3_DIR . "/{$oThisThurdySongData->sLiveVersion}"; ?>"
-												type="audio/mpeg" />
-											<a
-												href="<?php echo MP3_DIR . "/{$oThisThurdySongData->sLiveVersion}"; ?>"><?php echo $oThisSong->sSongName; ?></a>
-											An html5-capable browser is required to play this audio.
-										</audio>
-										<?php
-									}
-									?>
-								</div>
-							</div>
-							<div class="row">
-								<div class="col-xs-12 col-sm-10 col-sm-push-1 col-md-8 col-md-push-2">
-									<section id="song-review">
-										<?php
-										if (!empty($oThisSong)) {
-											$oSongReviews = $oThisSong->getReviews();
-											if (sizeof($oSongReviews->aReviewRecords) > 1) {
-												renderReviewSlideshow($oSongReviews->aReviewRecords);
-											} else if (sizeof($oSongReviews->aReviewRecords) > 0) {
-												renderReview($oSongReviews->aReviewRecords[0]);
-											} else {
-												$oReview = new Review();
-												$oReview->bGeneral = TRUE;
-												$oReview->nArtistID = THURDY_ARTIST_ID;
-												if (!$oReview->getReview()) {
-													//TODO: Error
-												} else {
-													renderReviewSlideshow($oReview->aReviewRecords);
-												}
-											}
-										}
-										?>
-									</section>
-								</div>
-							</div>
-
-							<div class="row">
-								<div class="col-xs-12">
-									<?php
-									if (!empty($oThisCD)) {
-										echo "<section class=\"from-the-cd\">";
-										echo "<div>";
-										echo "<a href=\"{$ROOT}/CD.php?cd-id={$oThisCD->nCDID}\">";
-										echo "<H3><i>From the CD</i></H3>";
-										echo "<img src=\"" . IMG_DIR . "/{$oThisCD->sCDThumbnail}\">";
-										echo "</a>";
 										echo "</div>";
-										echo "</section>";
+									}
+									if (!empty($oThisThurdySongData->artImage)) {
+										echo "<div class=\"col-xs-12\" style=\"text-align: center;\">";
+										echo "<IMG SRC=\"" . IMG_DIR . "/{$oThisThurdySongData->artImage}\">";
+										echo "</div>";
+									}
+								}
+								?>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-xs-12">
+								<?php
+								if ($oThisThurdySongData !== null && !empty($oThisThurdySongData->liveVersion)) {
+									echo "<h3 class=\"listen\">Did you hear \"{$oThisSong->name}\" live?</h3>";
+									?>
+									<audio controls data-info-att="Music: Thurdy" data-info-att-link="https://www.thurdy.com">
+										<source src="<?php echo MP3_DIR . "/{$oThisThurdySongData->liveVersion}"; ?>"
+											type="audio/mpeg" />
+										<a
+											href="<?php echo MP3_DIR . "/{$oThisThurdySongData->liveVersion}"; ?>"><?php echo $oThisSong->name; ?></a>
+										An html5-capable browser is required to play this audio.
+									</audio>
+									<?php
+								}
+								?>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-12 col-sm-10 col-sm-push-1 col-md-8 col-md-push-2">
+								<section id="song-review">
+									<?php
+									$songReviews = (new \Datalayer\ReviewRepository())->find(['songId' => $oThisSong->id]);
+									if (count($songReviews) > 1) {
+										renderReviewSlideshow($songReviews);
+									} elseif (count($songReviews) > 0) {
+										renderReview($songReviews[0]);
+									} else {
+										$generalReviews = (new \Datalayer\ReviewRepository())->find([
+											'general' => true,
+											'artistId' => THURDY_ARTIST_ID,
+										]);
+										if (count($generalReviews) > 0) {
+											renderReviewSlideshow($generalReviews);
+										}
 									}
 									?>
-
-								</div>
+								</section>
 							</div>
+						</div>
 
-
-						</main>
-					</div>
-				</div>
-				<div class="row">
-					<?php
-					include_once(INCLUDE_DIR . "/Footer.php");
-					?>
+						<div class="row">
+							<div class="col-xs-12">
+								<?php
+								if ($oThisCD !== null) {
+									echo "<section class=\"from-the-cd\">";
+									echo "<div>";
+									echo "<a href=\"{$ROOT}/CD.php?cd-id={$oThisCD->id}\">";
+									echo "<H3><i>From the CD</i></H3>";
+									echo "<img src=\"" . IMG_DIR . "/{$oThisCD->thumbnail}\">";
+									echo "</a>";
+									echo "</div>";
+									echo "</section>";
+								}
+								?>
+							</div>
+						</div>
+					</main>
 				</div>
 			</div>
-		</body>
+			<div class="row">
+				<?php
+				include_once(INCLUDE_DIR . "/Footer.php");
+				?>
+			</div>
+		</div>
+	</body>
 
-		</html>
-
-		<?php
-	} else {
-		$error = new ErrorLog('Song.php', 'getSong()', 'No Songs Found', $oSongs->nSongID, 'SONG');
-		$error->writeErrorLog();
-	}
+	</html>
+	<?php
 }
 ?>
 

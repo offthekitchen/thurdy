@@ -23,6 +23,7 @@ define("XML_DIR", $ROOT . "/xml");
 define("JS_DIR", $ROOT . "/javascript");
 define("INCLUDE_DIR", $ROOT . "/includes");
 define("CLASS_DIR", $ROOT . "/../classes");
+define("DATALAYER_DIR", $ROOT . "/../datalayer");
 define("ADMIN_DIR", $ROOT . "/admin");
 define("SETTINGS_DIR", $ROOT . "/../../settings");
 define("FB_IMAGE", "Thurdy_FB.png");
