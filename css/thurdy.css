@@ -596,6 +596,33 @@ footer#pageFooter div.rightCol {
 	font-size: 20px;
 }
 
+.syncable-title {
+	font-family: 'Amatic SC', bold;
+	font-size:50px;
+	text-decoration: none;
+	text-align: left;
+	margin-left: 15px;
+	color: white;
+}
+.container .home-story .syncable-title {
+	color: var(--thurdy-primary);
+} 
+
+.syncable-text {
+	font-size: 17px;
+	margin: 15px;
+}
+
+.syncable-stream {
+	text-align: center;
+	padding-top: 15px;
+}
+
+.syncable-song audio {
+	width: 100%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
 /********************
  Merch Page Styles
 *********************/

@@ -1,0 +1,4 @@
+# Sync previews are played through stream-sync.php. Add each protected filename here.
+<FilesMatch "^(Immortality - Instrumental\.mp3|Immortality - Full\.mp3|Afternoon With Einstein -  Instrumental\.mp3|Afternoon With Einstein - Full\.mp3|Drive Myself Insane - Instrumental\.mp3|Drive Myself Insane - Full\.mp3|You Dont Mean a Thing to Me - Instrumental\.mp3|You Dont Mean a Thing to Me - Full\.mp3|The Loop - Instrumental\.mp3|The Loop - Full\.mp3|Youre So Cute - Instrumental\.mp3|Youre So Cute - Full\.mp3)$">
+	Require all denied
+</FilesMatch>

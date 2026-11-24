@@ -42,28 +42,6 @@ $nNumberOfComments = 5;
 			<?php include_once(INCLUDE_DIR . "/Header.php"); ?>
 		</div>
 		<div class="row">
-
-			<div class="col-xs-12 col-md-3">
-				<div class="book-cover-container">
-					<figure class="dynamic-width">
-						<img src="<?php echo IMG_DIR ?>/TestingTheWatersCover.png">
-					</figure>
-				</div>
-			</div>
-			<div class="col-xs-12 col-md-9">
-				<div class="blurb">
-					<h3>NEW ALBUM! <i>TESTING THE WATERS</i></h3>
-					<p>The musical journey continues. I've completed another experiment "Testing the Waters". It's a
-						colleciton of
-						about 10 songs, each one an excuse to try some new technique, equipment or hare-brained idea.
-					</p>
-					<p>As always it's... um... rangy. And a bit weird
-					</p>
-					<p><a href="<?php echo $ROOT ?>/Music.php">MORE...</a></p>
-				</div>
-			</div>
-		</div>
-		<div class="row">
 			<div class="col-xs-12 col-md-3">
 				<div class="book-cover-container">
 					<img src="<?php echo IMG_DIR ?>/Immortality-Cover-400x400.png">
@@ -134,9 +112,9 @@ $nNumberOfComments = 5;
 					LISTEN
 				</div>
 			</div>
-			<div class="col-xs-12">
+			<div class="col-xs-12 col-md-6">
 				<div class="more-info">
-					CDs
+					ALBUMS
 				</div>
 				<div class="cds-cover">
 					<figure class="dynamic-width">
@@ -145,6 +123,21 @@ $nNumberOfComments = 5;
 					<?php
 					renderPurchaseButton("https://www.amazon.com/Maybe-This-Really-Wasnt-Such/dp/B07HR2LDGL");
 					?>
+				</div>
+			</div>
+			<div class="col-xs-12 col-md-6">
+				<div class="more-info">
+					SYNCABLE
+				</div>
+				<div class="cds-cover">
+					<figure class="dynamic-width">
+						<img src="<?php echo IMG_DIR ?>/CDs.png">
+					</figure>
+					<div class="center-contents">
+						<a href="<?php echo $ROOT ?>/Syncable.php">
+							<div class="button purchase-button">EXPLORE</div>
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
