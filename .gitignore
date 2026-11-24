@@ -7,3 +7,6 @@ Thurdy Website Redesign.docx
 error_log
 
 deploy/deploy.config.ps1
+classes
+phpinfo.php
+.cursor
