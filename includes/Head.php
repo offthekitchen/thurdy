@@ -24,6 +24,12 @@ if(empty($sPageName))
 	$sPageName = "Thurdy";
 }
 
+$robotsContent = !empty($sRobots) ? $sRobots : "index,follow";
+if (stripos($robotsContent, "noai") === false) {
+	$robotsContent .= ",noai,noimageai";
+}
+$robotsEsc = htmlspecialchars($robotsContent, ENT_QUOTES, "UTF-8");
+
 ?>
 <head>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
@@ -33,7 +39,8 @@ if(empty($sPageName))
 <meta name="title" content="Thurdy - <?php echo $sPageTitle; ?>" />
 <meta name="author" content="Thurdy" />
 <meta name="copyright" content="Thurdy" />
-<meta name="robots" content="index,follow"/>
+<meta name="robots" content="<?php echo $robotsEsc; ?>">
+<meta name="tdm-reservation" content="1">
 
 <!--Social Media Data -->
 <meta property="og:type" content="article" />
