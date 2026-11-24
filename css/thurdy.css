@@ -338,7 +338,7 @@ section.socialMediaMenu div.socialMediaItem{
 
 footer section.socialMediaMenu {
 	margin: 15px;
-	position: absolute;
+	position: relative;
 }
 
 a#FB_Icon {
