@@ -36,15 +36,15 @@ include_once(INCLUDE_DIR . "/Head.php");
 				</div>
 				<div class="syncable-text">
 					Below you'll find a collection of slightly off-kilter tunes available for sync in film, TV, advertising, trailers, and online content.<br>
-					Each song is available as an instrumental or with vocals, and all are completely original (no muss or fuss getting them cleared) and with no hint of AI.<br>
+					Each song is available as an instrumental or with vocals, and all are originals written, performed and produced by me (no muss, no fuss for clearing) and with not even a hint of AI.<br>
 					They are not ordinary though.  You can find tons of that elsewhere.  But if you're looking for 
 					something different to set your work apart, they might be exactly what you're looking for.<br>
-					...And if you need a different length, format or other version, <?php renderEmailLink('HIT ME UP');?>!!<BR>   
+					...And if you need a different length, format or other version, <?php renderEmailLink('HIT ME UP');?> for licensing enquiries or bespoke edits!!<BR>   
 				</div>
 			</div>
 		</div>
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-top.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-top.png" class="syncable-border">
 		</div>
 		<div class="row alt-home-story">
 			<div class="col-xs-12 col-md-4">
@@ -71,7 +71,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 			</div>
 		</div>
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-bottom.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-bottom.png" class="syncable-border">
 		</div>
 		<div class="row home-story">
 			<div class="col-xs-12 col-md-4">
@@ -98,7 +98,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 			</div>
 		</div>
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-top2.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-top2.png" class="syncable-border">
 		</div>
 		<div class="row alt-home-story2">
 			<div class="col-xs-12 col-md-4">
@@ -125,7 +125,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 			</div>
 		</div>
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-bottom2.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-bottom2.png" class="syncable-border">
 		</div>
 
 		<div class="row home-story">
@@ -154,7 +154,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 		</div>
 
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-top3.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-top3.png" class="syncable-border">
 		</div>
 		<div class="row alt-home-story3">
 			<div class="col-xs-12 col-md-4">
@@ -181,7 +181,7 @@ include_once(INCLUDE_DIR . "/Head.php");
 			</div>
 		</div>
 		<div class="row alt-story-border">
-			<img src="<?php echo IMG_DIR ?>/alt-story-bottom3.png">
+			<img src="<?php echo IMG_DIR ?>/alt-story-bottom3.png" class="syncable-border">
 		</div>
 		<div class="row home-story">
 			<div class="col-xs-12 col-md-4">
